@@ -14,7 +14,7 @@ To edit the displayed documents, or add new ones, please edit documents.json, an
         "tags": ["ADD_YOUR_TAGS HERE"],
         
         "classification": "CHOOSE_FROM_SECTION B"
-        },
+    },
      
 
   # SECTION B
