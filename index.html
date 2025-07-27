@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cloudville Military PDF Directory</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <style>
+    .pdf-entry {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      background: #f4f4f4;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .pdf-entry:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .tag {
+      background: #e0e0e0;
+      padding: 2px 6px;
+      border-radius: 2px;
+      margin-right: 4px;
+      font-size: 0.8rem;
+      display: inline-block;
+    }
+
+    .category-badge {
+      background: #2196f3;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .pdf-container {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .pdf-container canvas {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+
+<body>
+
+  <nav class="container-fluid">
+    <ul>
+      <li><strong>Cloudville Military</strong></li>
+    </ul>
+    <ul>
+      <li><a href="#">Home</a></li>
+      <li><a href="#documents">Documents</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="grid">
+      <section>
+        <hgroup>
+          <h2>File Viewing Directory</h2>
+          <h3>Searchable Secure Files</h3>
+        </hgroup>
+        <p>This tool lists military PDFs. Click a document to reveal its contents and search through the actual text
+          inside.</p>
+        <figure>
+          <img src="LINK_IMAGE_HERE" alt="Cloudville Military File Directory" />
+          <figcaption><a href="#" target="_blank">Cloudville Military - After Action Report Viewer</a></figcaption>
+        </figure>
+
+        <h3 id="documents">Available Documents</h3>
+        <div class="grid">
+          <input type="search" id="searchInput" placeholder="Search PDFs by name or text..."
+            oninput="filterDocuments()" />
+          <select id="categoryFilter" onchange="filterDocuments()">
+            <option value="">All Categories</option>
+            <option value="operations">Operations</option>
+            <option value="intelligence">Intelligence</option>
+            <option value="strategy">Strategy</option>
+            <option value="training">Training</option>
+            <option value="logistics">Logistics</option>
+          </select>
+        </div>
+
+        <div id="pdfList"></div>
+
+      </section>
+    </div>
+  </main>
+
+  <section aria-label="Subscribe example">
+    <div class="container">
+      <article>
+        <hgroup>
+          <h2>Stay Informed</h2>
+          <h3>Get updates on document changes or uploads</h3>
+        </hgroup>
+        <form class="grid">
+          <input type="text" id="firstname" name="firstname" placeholder="Your name" aria-label="Your name" required />
+          <input type="email" id="email" name="email" placeholder="Your email" aria-label="Your email" required />
+          <button type="submit" onclick="event.preventDefault()">Subscribe</button>
+        </form>
+      </article>
+    </div>
+  </section>
+
+  <footer class="container">
+    <small>
+      <a href="#">Cloudville Military</a> •
+      <a href="#">Terms & Privacy</a>
+    </small>
+  </footer>
+
+  <script>
+    // Set PDF.js worker path to fix console warning
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let documents = [];
+    const pdfList = document.getElementById('pdfList');
+
+    // Load documents from JSON file
+    async function loadDocuments() {
+      try {
+        const response = await fetch('./documents.json');
+        documents = await response.json();
+        renderDocuments();
+      } catch (error) {
+        console.error('Error loading documents:', error);
+        // Fallback to empty array
+        documents = [];
+      }
+    }
+
+    function renderDocuments() {
+      pdfList.innerHTML = '';
+
+      documents.forEach((doc, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'pdf-entry';
+        wrapper.setAttribute('data-name', doc.name.toLowerCase());
+        wrapper.setAttribute('data-category', doc.category);
+        wrapper.setAttribute('data-tags', doc.tags.join(' ').toLowerCase());
+
+        // Document header with title and classification
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        header.style.marginBottom = '0.5rem';
+
+        const button = document.createElement('button');
+        button.textContent = doc.name;
+        button.setAttribute('aria-expanded', 'false');
+        button.onclick = () => togglePDF(index, doc.url);
+        button.style.flex = '1';
+        button.style.marginRight = '1rem';
+
+        const classificationBadge = document.createElement('span');
+        classificationBadge.textContent = doc.classification;
+        classificationBadge.style.padding = '0.25rem 0.5rem';
+        classificationBadge.style.borderRadius = '3px';
+        classificationBadge.style.fontSize = '0.75rem';
+        classificationBadge.style.fontWeight = 'bold';
+        classificationBadge.style.color = 'white';
+        classificationBadge.style.backgroundColor = getClassificationColor(doc.classification);
+
+        header.appendChild(button);
+        header.appendChild(classificationBadge);
+
+        // Category and tags
+        const metadata = document.createElement('div');
+        metadata.style.marginBottom = '0.5rem';
+        metadata.style.fontSize = '0.9rem';
+
+        const categorySpan = document.createElement('span');
+        categorySpan.textContent = `Category: ${doc.category.charAt(0).toUpperCase() + doc.category.slice(1)}`;
+        categorySpan.style.marginRight = '1rem';
+        categorySpan.style.fontWeight = 'bold';
+
+        const tagsSpan = document.createElement('span');
+        tagsSpan.innerHTML = `Tags: ${doc.tags.map(tag => 
+          `<span style="background: #e0e0e0; padding: 2px 6px; border-radius: 2px; margin-right: 4px; font-size: 0.8rem;">${tag}</span>`
+        ).join('')}`;
+
+        metadata.appendChild(categorySpan);
+        metadata.appendChild(tagsSpan);
+
+        const viewer = document.createElement('div');
+        viewer.className = 'pdf-container';
+        viewer.id = `viewer-${index}`;
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'pdf-text-content';
+        textDiv.style.display = 'none';
+        textDiv.setAttribute('data-text', '');
+
+        wrapper.appendChild(header);
+        wrapper.appendChild(metadata);
+        wrapper.appendChild(viewer);
+        wrapper.appendChild(textDiv);
+        pdfList.appendChild(wrapper);
+      });
+    }
+
+    async function togglePDF(index, url) {
+      const viewer = document.getElementById(`viewer-${index}`);
+      const wrapper = viewer.parentElement;
+      const button = wrapper.querySelector('button');
+      const isVisible = viewer.style.display === 'block';
+
+      if (isVisible) {
+        viewer.style.display = 'none';
+        button.setAttribute('aria-expanded', 'false');
+        return;
+      }
+
+      viewer.style.display = 'block';
+      button.setAttribute('aria-expanded', 'true');
+
+      if (viewer.getAttribute('data-loaded')) return;
+
+      try {
+        const pdf = await pdfjsLib.getDocument(url).promise;
+        let allText = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({scale: 1.5});
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          await page.render({canvasContext: context, viewport}).promise;
+          viewer.appendChild(canvas);
+
+          const text = await page.getTextContent();
+          const pageText = text.items.map(item => item.str).join(' ');
+          allText += pageText + ' ';
+        }
+
+        wrapper.querySelector('.pdf-text-content').setAttribute('data-text', allText.toLowerCase());
+        wrapper.querySelector('.pdf-text-content').style.display = 'none';
+
+        viewer.setAttribute('data-loaded', 'true');
+      } catch (error) {
+        console.error('Error loading PDF:', error);
+        viewer.innerHTML = '<p>Error loading PDF. Please check the URL.</p>';
+      }
+    }
+
+    function getClassificationColor(classification) {
+      switch(classification) {
+        case 'TOP SECRET': return '#d32f2f';
+        case 'SECRET': return '#f57c00';
+        case 'CONFIDENTIAL': return '#1976d2';
+        case 'UNCLASSIFIED': return '#388e3c';
+        default: return '#666';
+      }
+    }
+
+    function filterDocuments() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const categoryFilter = document.getElementById('categoryFilter').value;
+      const entries = document.querySelectorAll('.pdf-entry');
+
+      entries.forEach(entry => {
+        const name = entry.getAttribute('data-name');
+        const category = entry.getAttribute('data-category');
+        const tags = entry.getAttribute('data-tags');
+        const text = entry.querySelector('.pdf-text-content').getAttribute('data-text') || '';
+
+        const matchesSearch = name.includes(searchTerm) || 
+                             text.includes(searchTerm) || 
+                             tags.includes(searchTerm);
+        const matchesCategory = !categoryFilter || category === categoryFilter;
+
+        const visible = matchesSearch && matchesCategory;
+        entry.style.display = visible ? '' : 'none';
+      });
+    }
+
+    // Load documents when page loads
+    loadDocuments();
+  </script>
+
+</body>
+
+</html>
