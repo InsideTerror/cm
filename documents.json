@@ -25,6 +25,7 @@
 {
     "_comment1": "This is the basic data",
     "editor_name": "Fritz Teufel",
-    "age": 35,
-    "city": "New York City",
+    "age": 25,
+    "Category_Values": "operations, intelligence, strategy, training, logistics,"
+    "Classification_Values": "TOP SECRET, SECRET, CONFIDENTIAL, UNCLASSIFIED,"
 }
