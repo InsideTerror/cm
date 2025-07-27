@@ -4,18 +4,18 @@
     "name": "Operation Iron Dagger",
     "url": "https://file.garden/Z_-mJ8vOt3F2fRcP/Operation%20Iron%20Dagger.pdf",
     "category": "operations",
-    "tags": ["classified", "combat", "urban", "2024"],
-    "classification": "SECRET"
+    "tags": ["classified", "combat", "urban", "2025"],
+    "classification": "CONFIDENTIAL"
   },
   {
-    "name": "Intel Report Alpha",
+    "name": "DUMMY FILE",
     "url": "https://filegarden.example.com/intel-report-alpha.pdf",
     "category": "intelligence",
     "tags": ["reconnaissance", "enemy-positions", "urgent"],
     "classification": "TOP SECRET"
   },
   {
-    "name": "Strategy Plan Eagle",
+    "name": "DUMMY FILE",
     "url": "https://filegarden.example.com/strategy-plan-eagle.pdf",
     "category": "strategy",
     "tags": ["long-term", "defensive", "coalition"],
