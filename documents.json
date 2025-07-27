@@ -22,3 +22,9 @@
     "classification": "CONFIDENTIAL"
   }
 ]
+{
+    "_comment1": "This is the basic data",
+    "editor_name": "Fritz Teufel",
+    "age": 35,
+    "city": "New York City",
+}
