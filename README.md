@@ -3,7 +3,7 @@
 A sleek, fully client-side receipt and document generator built with pure HTML, CSS, and JavaScript.  
 Create professional-looking receipts, invoices, restaurant bills, and hotel folios directly in your browser — no backend required.
 
--# This generator is intended for fictional uses ONLY
+**This generator is intended for fictional uses ONLY**
 
 ## Features
 
