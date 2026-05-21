@@ -1,35 +1,18 @@
-Cloudville Military PDF Viewer
+# Receipt Generator
 
-# SECTION A
-**EDITING**
-To edit the displayed documents, or add new ones, please edit documents.json, and fill out the template, exatly as follows:
+This is a free receipt generator I made a while back. It uses a simply HTML frontend, with dynamically updating textboxes.
 
-    {
-        "name": "TYPE_NAME_HERE",
-        
-        "url": "YOUR_FILE_URL_HERE",
-        
-        "category": "CHOOSE_FROM_SECTION B",
-        
-        "tags": ["ADD_YOUR_TAGS HERE"],
-        
-        "classification": "CHOOSE_FROM_SECTION B"
-    },
-     
+## Usage
 
-  # SECTION B
+Go to bill.catcorporation.top or download the source code an run it in your browser. 
 
-  **Pickable JSON items**
-  The following items can be chosen for: "category"
-  * operations
-  * intelligence
-  * strategy
-  * training
-  * logistics
+The following fields can be altered:
 
-  The following items can be chosen for: "classification"
-  * TOP SECRET
-  * intelligence
-  * strategy
-  * training
-  * logistics
+* Store Info — shop name, address, phone, and website
+* Transaction — date, time, receipt number, and cashier name
+* Items — add/remove/edit each item's name, quantity, and unit price. Totals update live.
+* Totals — tax percentage, discount amount, and cash given (auto-calculates change)
+* Payment — choose between Cash, Card, Card + Cash, or Mobile Pay — each shows the relevant fields (card last 4, approval code, change due, etc.)
+* Footer — toggle the "Thank You" message and barcode, add a custom note (e.g. return policy)
+* Labels — change the receipt title (e.g. "INVOICE", "SALES RECEIPT") and currency symbol
+* To save as a PDF, just click the Print / Save as PDF button and choose "Save as PDF" in your browser's print dialog — the editor panel hides automatically so only the clean receipt prints.
