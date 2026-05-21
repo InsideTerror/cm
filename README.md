@@ -1,18 +1,150 @@
-# Receipt Generator
+# Receipt Studio Pro
 
-This is a free receipt generator I made a while back. It uses a simply HTML frontend, with dynamically updating textboxes.
+A sleek, fully client-side receipt and document generator built with pure HTML, CSS, and JavaScript.  
+Create professional-looking receipts, invoices, restaurant bills, and hotel folios directly in your browser — no backend required.
+
+## Features
+
+- 🧾 **Sales Receipt Generator**
+- 📄 **Invoice Creator**
+- 🍽 **Restaurant Receipt Mode**
+- 🏨 **Hotel Folio Generator**
+- 🎨 Multiple receipt themes:
+  - Light
+  - Thermal printer
+  - Aged paper
+- 💾 Save and load projects as JSON
+- 🖨 Print-ready PDF export
+- 🔄 Drag-and-drop item reordering
+- 💳 Split payment support
+- 📦 Category grouping for restaurant receipts
+- 📊 Automatic tax, discount, gratuity, and total calculations
+- 📱 Responsive design
+- ⚡ Fully offline & client-side
+
+---
+
+## Technologies Used
+
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- No frameworks
+- No dependencies
+- No server required
+
+---
+
+## Supported Document Types
+
+### 🧾 Sales Receipts
+Perfect for retail stores and general purchases.
+
+### 📄 Invoices
+Includes:
+- Bill To / Ship To
+- Payment terms
+- Banking details
+- Itemized billing
+
+### 🍽 Restaurant Receipts
+Supports:
+- Table numbers
+- Servers
+- Gratuity suggestions
+- Signature lines
+- Item categories
+
+### 🏨 Hotel Folios
+Supports:
+- Guest details
+- Room charges
+- Multi-category expenses
+- Stay duration calculations
+
+---
+
+## Installation
+
+Simply download or clone the repository.
+
+```bash
+git clone https://github.com/yourusername/receipt-studio-pro.git
+```
+
+Then open:
+
+```bash
+index.html
+```
+
+in your browser.
+
+---
 
 ## Usage
 
-Go to bill.catcorporation.top or download the source code an run it in your browser. 
+1. Select a document mode
+2. Fill in company/store information
+3. Add items or charges
+4. Configure taxes, discounts, and payments
+5. Print or save as PDF
 
-The following fields can be altered:
+---
 
-* Store Info — shop name, address, phone, and website
-* Transaction — date, time, receipt number, and cashier name
-* Items — add/remove/edit each item's name, quantity, and unit price. Totals update live.
-* Totals — tax percentage, discount amount, and cash given (auto-calculates change)
-* Payment — choose between Cash, Card, Card + Cash, or Mobile Pay — each shows the relevant fields (card last 4, approval code, change due, etc.)
-* Footer — toggle the "Thank You" message and barcode, add a custom note (e.g. return policy)
-* Labels — change the receipt title (e.g. "INVOICE", "SALES RECEIPT") and currency symbol
-* To save as a PDF, just click the Print / Save as PDF button and choose "Save as PDF" in your browser's print dialog — the editor panel hides automatically so only the clean receipt prints.
+## File Structure
+
+```text
+/
+├── index.html
+└── README.md
+```
+
+---
+
+## Data Persistence
+
+Projects can be:
+- Exported as `.json`
+- Reloaded later
+- Shared between devices
+
+No data is sent to any server.
+
+---
+
+## Browser Compatibility
+
+Tested on:
+- Google Chrome
+- Firefox
+- Microsoft Edge
+- Brave
+
+Should work on all modern browsers.
+
+---
+
+## Planned Features
+
+- Multiple currency formats
+- Logo uploads
+- QR code support
+- Cloud save
+- Multi-language support
+- Thermal printer optimization
+- Dark mode editor
+
+---
+
+## License
+
+MIT License
+
+Feel free to modify, distribute, and use commercially.
+
+---
+
+## Author
+
+Built by CAT Corp.
