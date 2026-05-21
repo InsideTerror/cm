@@ -5,6 +5,10 @@ Create professional-looking receipts, invoices, restaurant bills, and hotel foli
 
 **This generator is intended for fictional uses ONLY**
 
+## Why?
+
+I wanted to make a few joke receipts with my friends, but all the websites used the same pay-to-download format, so I decided to code one myself.
+
 ## Features
 
 - 🧾 **Sales Receipt Generator**
