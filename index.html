@@ -1,296 +1,823 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cloudville Military PDF Directory</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
-  <style>
-    .pdf-entry {
-      border: 1px solid #ccc;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 5px;
-      background: #f4f4f4;
-      transition: box-shadow 0.2s ease;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .pdf-entry:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+  :root {
+    --ink: #1a1a1a;
+    --paper: #faf8f4;
+    --cream: #f2efe8;
+    --muted: #888;
+    --accent: #2d5016;
+    --accent2: #c8a45a;
+    --panel: #ffffff;
+    --border: #e0dbd0;
+    --shadow: rgba(0,0,0,0.08);
+  }
 
-    .tag {
-      background: #e0e0e0;
-      padding: 2px 6px;
-      border-radius: 2px;
-      margin-right: 4px;
-      font-size: 0.8rem;
-      display: inline-block;
-    }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #1c1c1c;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    color: var(--ink);
+  }
 
-    .category-badge {
-      background: #2196f3;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 0.8rem;
-      font-weight: bold;
-    }
+  /* ── TOP TITLE ── */
+  .app-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .app-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--paper);
+    letter-spacing: 1px;
+  }
+  .app-header p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: #888;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
 
-    .pdf-container {
-      display: none;
-      margin-top: 1rem;
-    }
+  /* ── LAYOUT ── */
+  .workspace {
+    display: flex;
+    gap: 36px;
+    width: 100%;
+    max-width: 1100px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
-    .pdf-container canvas {
-      width: 100%;
-      margin-bottom: 1rem;
-    }
-  </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  /* ── EDITOR PANEL ── */
+  .editor {
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 32px;
+    flex: 1 1 380px;
+    max-width: 460px;
+    box-shadow: 0 8px 40px var(--shadow);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field-group { margin-bottom: 24px; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+  }
+
+  input[type="text"], input[type="date"], input[type="number"], textarea, select {
+    width: 100%;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--ink);
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(45,80,22,.1);
+  }
+  textarea { resize: vertical; min-height: 56px; line-height: 1.5; }
+
+  /* ── ITEMS ── */
+  .items-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr 64px 80px 32px;
+    gap: 8px;
+    align-items: center;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    transition: border-color .2s;
+  }
+  .item-row:hover { border-color: #ccc; }
+  .item-row input {
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    font-size: 0.82rem;
+    border-bottom: 1.5px solid transparent;
+    border-radius: 0;
+    transition: border-color .2s;
+  }
+  .item-row input:focus { border-bottom-color: var(--accent); box-shadow: none; }
+
+  .item-col-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 1rem;
+    line-height: 1;
+    transition: color .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+  .btn-remove:hover { color: #e05; background: #fff0f0; }
+
+  .btn-add {
+    width: 100%;
+    margin-top: 12px;
+    padding: 9px;
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    background: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+    transition: all .2s;
+  }
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); background: rgba(45,80,22,.04); }
+
+  /* ── EXTRAS ── */
+  .extras-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .toggle-row label { margin: 0; font-size: 0.8rem; color: var(--ink); }
+
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #ddd;
+    border-radius: 22px;
+    transition: .3s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: .3s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  /* ── PRINT BUTTON ── */
+  .btn-print {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+  }
+  .btn-print:hover { background: #3a6b1e; }
+  .btn-print:active { transform: scale(.98); }
+
+  /* ── RECEIPT PREVIEW ── */
+  .preview-wrap {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .preview-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #666;
+  }
+
+  .receipt {
+    width: 320px;
+    background: var(--paper);
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    filter: drop-shadow(0 12px 40px rgba(0,0,0,.35));
+    position: relative;
+  }
+
+  /* Jagged top */
+  .receipt-top {
+    width: 100%;
+    height: 18px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--paper) 0px, var(--paper) 12px,
+      transparent 12px, transparent 24px
+    );
+    mask: radial-gradient(circle at 6px 0, transparent 6px, black 6px) 0 0 / 12px 100%;
+    -webkit-mask: radial-gradient(circle at 6px 0, transparent 6px, black 6px) 0 0 / 12px 100%;
+  }
+  .receipt-bottom {
+    width: 100%;
+    height: 18px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--paper) 0px, var(--paper) 12px,
+      transparent 12px, transparent 24px
+    );
+    mask: radial-gradient(circle at 6px 100%, transparent 6px, black 6px) 0 0 / 12px 100%;
+    -webkit-mask: radial-gradient(circle at 6px 100%, transparent 6px, black 6px) 0 0 / 12px 100%;
+  }
+
+  .receipt-body {
+    background: var(--paper);
+    padding: 8px 28px 20px;
+  }
+
+  .r-header {
+    text-align: center;
+    padding: 10px 0 16px;
+    border-bottom: 1px dashed #ccc;
+    margin-bottom: 14px;
+  }
+  .r-shop-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .r-address {
+    font-size: 0.62rem;
+    color: #666;
+    margin-top: 3px;
+    line-height: 1.6;
+  }
+  .r-dots {
+    font-size: 0.55rem;
+    color: #bbb;
+    letter-spacing: 2px;
+    text-align: center;
+    margin: 8px 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .r-title {
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin: 4px 0 8px;
+  }
+  .r-meta {
+    font-size: 0.6rem;
+    color: #555;
+    line-height: 1.9;
+    margin-bottom: 4px;
+  }
+  .r-meta-row {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .r-divider {
+    border: none;
+    border-top: 1px dashed #ccc;
+    margin: 10px 0;
+  }
+  .r-divider-solid {
+    border: none;
+    border-top: 1.5px solid #bbb;
+    margin: 10px 0;
+  }
+
+  .r-col-headers {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 6px;
+  }
+
+  .r-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    padding: 3px 0;
+  }
+  .r-item-name { flex: 1; }
+  .r-item-qty { width: 30px; text-align: center; color: #666; }
+  .r-item-price { width: 60px; text-align: right; }
+
+  .r-totals { margin-top: 4px; }
+  .r-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    padding: 2px 0;
+    color: #555;
+  }
+  .r-grand-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 6px 0 4px;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+
+  .r-payment {
+    margin-top: 4px;
+    font-size: 0.62rem;
+    color: #555;
+    line-height: 1.9;
+  }
+
+  .r-footer {
+    text-align: center;
+    margin-top: 14px;
+  }
+  .r-thank-you {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .r-note {
+    font-size: 0.58rem;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* Barcode */
+  .r-barcode {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2px;
+    margin-top: 14px;
+    height: 42px;
+  }
+  .r-barcode-num {
+    text-align: center;
+    font-size: 0.5rem;
+    margin-top: 4px;
+    letter-spacing: 2px;
+    color: #555;
+  }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: white; padding: 0; }
+    .editor, .app-header, .preview-label { display: none; }
+    .preview-wrap { align-items: flex-start; }
+    .receipt { filter: none; }
+  }
+
+  /* color theme picker */
+  .theme-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .swatch {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    cursor: pointer;
+    transition: transform .15s, border-color .15s;
+  }
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.active { border-color: #333; }
+</style>
 </head>
-
 <body>
 
-  <nav class="container-fluid">
-    <ul>
-      <li><strong>Cloudville Military</strong></li>
-    </ul>
-    <ul>
-      <li><a href="#">Home</a></li>
-      <li><a href="#documents">Documents</a></li>
-    </ul>
-  </nav>
+<header class="app-header">
+  <h1>Receipt Generator</h1>
+  <p>Design · Print · Export</p>
+</header>
 
-  <main class="container">
-    <div class="grid">
-      <section>
-        <hgroup>
-          <h2>File Viewing Directory</h2>
-          <h3>Searchable Secure Files</h3>
-        </hgroup>
-        <p>This tool lists military PDFs. Click a document to reveal its contents and search through the actual text
-          inside.</p>
-        <figure>
-          <img src="https://file.garden/Z_-mJ8vOt3F2fRcP/cc16342d-7f03-436e-8ade-1000a8c567b8.png" alt="Cloudville Military File Directory" />
-          <figcaption><a href="#" target="_blank">Cloudville Military - After Action Report Viewer</a></figcaption>
-        </figure>
+<div class="workspace">
 
-        <h3 id="documents">Available Documents</h3>
-        <div class="grid">
-          <input type="search" id="searchInput" placeholder="Search PDFs by name, tags or text..."
-            oninput="filterDocuments()" />
-          <select id="categoryFilter" onchange="filterDocuments()">
-            <option value="">All Categories</option>
-            <option value="operations">Operations</option>
-            <option value="intelligence">Intelligence</option>
-            <option value="strategy">Strategy</option>
-            <option value="training">Training</option>
-            <option value="logistics">Logistics</option>
+  <!-- ═══ EDITOR ═══ -->
+  <div class="editor">
+
+    <!-- Store Info -->
+    <div class="field-group">
+      <div class="section-label">Store Info</div>
+      <label>Shop Name</label>
+      <input type="text" id="shopName" value="THE GROVE MARKET" oninput="render()">
+      <div style="height:10px"></div>
+      <label>Address</label>
+      <textarea id="shopAddress" oninput="render()">123 Oak Street, Suite 4
+New York, NY 10001</textarea>
+      <div style="height:10px"></div>
+      <div class="field-row">
+        <div>
+          <label>Phone</label>
+          <input type="text" id="shopPhone" value="(212) 555-0199" oninput="render()">
+        </div>
+        <div>
+          <label>Website</label>
+          <input type="text" id="shopWeb" value="www.thegrove.co" oninput="render()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction -->
+    <div class="field-group">
+      <div class="section-label">Transaction</div>
+      <div class="field-row">
+        <div>
+          <label>Date</label>
+          <input type="date" id="txDate" oninput="render()">
+        </div>
+        <div>
+          <label>Time</label>
+          <input type="text" id="txTime" value="02:34 PM" oninput="render()">
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <div class="field-row">
+        <div>
+          <label>Receipt #</label>
+          <input type="text" id="txNum" value="#00847" oninput="render()">
+        </div>
+        <div>
+          <label>Cashier</label>
+          <input type="text" id="txCashier" value="Alex M." oninput="render()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="field-group">
+      <div class="section-label">Items</div>
+      <div class="items-list" id="itemsList"></div>
+      <button class="btn-add" onclick="addItem()">＋ ADD ITEM</button>
+    </div>
+
+    <!-- Tax & Extras -->
+    <div class="field-group">
+      <div class="section-label">Totals</div>
+      <div class="extras-row">
+        <div>
+          <label>Tax %</label>
+          <input type="number" id="taxPct" value="8.5" min="0" step="0.1" oninput="render()">
+        </div>
+        <div>
+          <label>Discount $</label>
+          <input type="number" id="discount" value="0" min="0" step="0.01" oninput="render()">
+        </div>
+        <div>
+          <label>Cash Given $</label>
+          <input type="number" id="cashGiven" value="60" min="0" step="0.01" oninput="render()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="field-group">
+      <div class="section-label">Payment</div>
+      <div class="field-row">
+        <div>
+          <label>Method</label>
+          <select id="payMethod" onchange="render()">
+            <option>Cash</option>
+            <option>Card</option>
+            <option>Card + Cash</option>
+            <option>Mobile Pay</option>
           </select>
         </div>
-
-        <div id="pdfList"></div>
-
-      </section>
+        <div>
+          <label>Card Last 4</label>
+          <input type="text" id="cardLast4" value="4821" maxlength="4" oninput="render()">
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <label>Approval Code</label>
+      <input type="text" id="approvalCode" value="#AX902341" oninput="render()">
     </div>
-  </main>
 
-  <section aria-label="Subscribe example">
-    <div class="container">
-      <article>
-        <hgroup>
-          <h2>Stay Informed</h2>
-          <h3>Get updates on document changes or uploads</h3>
-        </hgroup>
-        <form class="grid">
-          <input type="text" id="firstname" name="firstname" placeholder="Your name" aria-label="Your name" required />
-          <input type="email" id="email" name="email" placeholder="Your email" aria-label="Your email" required />
-          <button type="submit" onclick="event.preventDefault()">Subscribe</button>
-        </form>
-      </article>
+    <!-- Footer / Note -->
+    <div class="field-group">
+      <div class="section-label">Footer</div>
+      <div class="toggle-row">
+        <label>Show "Thank You"</label>
+        <label class="toggle"><input type="checkbox" id="showThanks" checked onchange="render()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <label>Show Barcode</label>
+        <label class="toggle"><input type="checkbox" id="showBarcode" checked onchange="render()"><span class="toggle-slider"></span></label>
+      </div>
+      <label>Custom Footer Note</label>
+      <textarea id="footerNote" placeholder="Return policy, opening hours, etc." oninput="render()">All sales final. Returns within 14 days with receipt.</textarea>
     </div>
-  </section>
 
-  <footer class="container">
-    <small>
-      <a href="#">Cloudville Military</a> •
-      <a href="#">Terms & Privacy</a>
-    </small>
-  </footer>
+    <!-- Receipt Title -->
+    <div class="field-group">
+      <div class="section-label">Labels</div>
+      <div class="field-row">
+        <div>
+          <label>Receipt Title</label>
+          <input type="text" id="receiptTitle" value="SALES RECEIPT" oninput="render()">
+        </div>
+        <div>
+          <label>Currency Symbol</label>
+          <input type="text" id="currency" value="$" maxlength="3" oninput="render()">
+        </div>
+      </div>
+    </div>
 
-  <script>
-    // Set PDF.js worker path to fix console warning
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    <button class="btn-print" onclick="window.print()">⬡ PRINT / SAVE AS PDF</button>
+  </div>
 
-    let documents = [];
-    const pdfList = document.getElementById('pdfList');
+  <!-- ═══ PREVIEW ═══ -->
+  <div class="preview-wrap">
+    <div class="preview-label">Live Preview</div>
+    <div class="receipt" id="receipt">
+      <div class="receipt-top"></div>
+      <div class="receipt-body" id="receiptBody"></div>
+      <div class="receipt-bottom"></div>
+    </div>
+  </div>
 
-    // Load documents from JSON file
-    async function loadDocuments() {
-      try {
-        const response = await fetch('./documents.json');
-        documents = await response.json();
-        renderDocuments();
-      } catch (error) {
-        console.error('Error loading documents:', error);
-        // Fallback to empty array
-        documents = [];
-      }
-    }
+</div>
 
-    function renderDocuments() {
-      pdfList.innerHTML = '';
+<script>
+// Default items
+let items = [
+  { name: 'Organic Earl Grey Tea', qty: 2, price: 8.50 },
+  { name: 'Sourdough Loaf', qty: 1, price: 6.75 },
+  { name: 'Raw Honey (250g)', qty: 1, price: 12.00 },
+  { name: 'Oat Milk 1L', qty: 3, price: 3.99 },
+];
 
-      documents.forEach((doc, index) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'pdf-entry';
-        wrapper.setAttribute('data-name', doc.name.toLowerCase());
-        wrapper.setAttribute('data-category', doc.category);
-        wrapper.setAttribute('data-tags', doc.tags.join(' ').toLowerCase());
+function addItem() {
+  items.push({ name: 'New Item', qty: 1, price: 0.00 });
+  renderEditor();
+  render();
+}
 
-        // Document header with title and classification
-        const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.alignItems = 'center';
-        header.style.marginBottom = '0.5rem';
+function removeItem(i) {
+  items.splice(i, 1);
+  renderEditor();
+  render();
+}
 
-        const button = document.createElement('button');
-        button.textContent = doc.name;
-        button.setAttribute('aria-expanded', 'false');
-        button.onclick = () => togglePDF(index, doc.url);
-        button.style.flex = '1';
-        button.style.marginRight = '1rem';
+function renderEditor() {
+  const list = document.getElementById('itemsList');
+  list.innerHTML = items.map((it, i) => `
+    <div class="item-row">
+      <div>
+        <div class="item-col-label">Description</div>
+        <input type="text" value="${esc(it.name)}"
+          oninput="items[${i}].name=this.value;render()">
+      </div>
+      <div>
+        <div class="item-col-label">Qty</div>
+        <input type="number" value="${it.qty}" min="1" step="1"
+          oninput="items[${i}].qty=parseFloat(this.value)||1;render()">
+      </div>
+      <div>
+        <div class="item-col-label">Unit $</div>
+        <input type="number" value="${it.price}" min="0" step="0.01"
+          oninput="items[${i}].price=parseFloat(this.value)||0;render()">
+      </div>
+      <button class="btn-remove" onclick="removeItem(${i})" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
 
-        const classificationBadge = document.createElement('span');
-        classificationBadge.textContent = doc.classification;
-        classificationBadge.style.padding = '0.25rem 0.5rem';
-        classificationBadge.style.borderRadius = '3px';
-        classificationBadge.style.fontSize = '0.75rem';
-        classificationBadge.style.fontWeight = 'bold';
-        classificationBadge.style.color = 'white';
-        classificationBadge.style.backgroundColor = getClassificationColor(doc.classification);
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-        header.appendChild(button);
-        header.appendChild(classificationBadge);
+function fmt(n, cur) {
+  return `${cur}${parseFloat(n).toFixed(2)}`;
+}
 
-        // Category and tags
-        const metadata = document.createElement('div');
-        metadata.style.marginBottom = '0.5rem';
-        metadata.style.fontSize = '0.9rem';
+function barcodeSVG() {
+  const bars = [];
+  const widths = [2,1,3,1,2,2,1,3,2,1,2,1,3,1,2,3,1,2,1,2,1,3,2,1,1,3,2,1,2,1];
+  let x = 0;
+  widths.forEach((w, i) => {
+    if (i % 2 === 0) bars.push(`<rect x="${x}" y="0" width="${w*2}" height="36" fill="#222"/>`);
+    x += w * 2;
+  });
+  return `<svg width="${x}" height="36" viewBox="0 0 ${x} 36" xmlns="http://www.w3.org/2000/svg">${bars.join('')}</svg>`;
+}
 
-        const categorySpan = document.createElement('span');
-        categorySpan.textContent = `Category: ${doc.category.charAt(0).toUpperCase() + doc.category.slice(1)}`;
-        categorySpan.style.marginRight = '1rem';
-        categorySpan.style.fontWeight = 'bold';
+function render() {
+  const cur = document.getElementById('currency').value || '$';
+  const shopName = document.getElementById('shopName').value;
+  const shopAddress = document.getElementById('shopAddress').value.replace(/\n/g,'<br>');
+  const shopPhone = document.getElementById('shopPhone').value;
+  const shopWeb = document.getElementById('shopWeb').value;
+  const txDate = document.getElementById('txDate').value;
+  const txTime = document.getElementById('txTime').value;
+  const txNum = document.getElementById('txNum').value;
+  const txCashier = document.getElementById('txCashier').value;
+  const taxPct = parseFloat(document.getElementById('taxPct').value) || 0;
+  const discount = parseFloat(document.getElementById('discount').value) || 0;
+  const cashGiven = parseFloat(document.getElementById('cashGiven').value) || 0;
+  const payMethod = document.getElementById('payMethod').value;
+  const cardLast4 = document.getElementById('cardLast4').value;
+  const approvalCode = document.getElementById('approvalCode').value;
+  const showThanks = document.getElementById('showThanks').checked;
+  const showBarcode = document.getElementById('showBarcode').checked;
+  const footerNote = document.getElementById('footerNote').value;
+  const receiptTitle = document.getElementById('receiptTitle').value;
 
-        const tagsSpan = document.createElement('span');
-        tagsSpan.innerHTML = `Tags: ${doc.tags.map(tag => 
-          `<span style="background: #e0e0e0; padding: 2px 6px; border-radius: 2px; margin-right: 4px; font-size: 0.8rem;">${tag}</span>`
-        ).join('')}`;
+  // Format date
+  let dateStr = '';
+  if (txDate) {
+    const d = new Date(txDate + 'T12:00:00');
+    dateStr = d.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  } else {
+    const now = new Date();
+    dateStr = now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  }
 
-        metadata.appendChild(categorySpan);
-        metadata.appendChild(tagsSpan);
+  // Calc
+  const subtotal = items.reduce((s, it) => s + it.qty * it.price, 0);
+  const taxable = Math.max(0, subtotal - discount);
+  const tax = taxable * taxPct / 100;
+  const total = taxable + tax;
+  const change = Math.max(0, cashGiven - total);
 
-        const viewer = document.createElement('div');
-        viewer.className = 'pdf-container';
-        viewer.id = `viewer-${index}`;
+  // Items rows
+  const itemRows = items.map(it => `
+    <div class="r-item">
+      <div class="r-item-name">${esc(it.name)}</div>
+      <div class="r-item-qty">${it.qty}</div>
+      <div class="r-item-price">${fmt(it.qty * it.price, cur)}</div>
+    </div>
+  `).join('');
 
-        const textDiv = document.createElement('div');
-        textDiv.className = 'pdf-text-content';
-        textDiv.style.display = 'none';
-        textDiv.setAttribute('data-text', '');
+  // Payment block
+  let payLines = '';
+  if (payMethod === 'Cash') {
+    payLines = `
+      <div class="r-meta-row"><span>Cash Tendered</span><span>${fmt(cashGiven, cur)}</span></div>
+      <div class="r-meta-row"><span>Change Due</span><span>${fmt(change, cur)}</span></div>
+    `;
+  } else if (payMethod === 'Card') {
+    payLines = `
+      <div class="r-meta-row"><span>Card ···· ${cardLast4}</span><span>${fmt(total, cur)}</span></div>
+      <div class="r-meta-row"><span>Approval Code</span><span>${esc(approvalCode)}</span></div>
+    `;
+  } else if (payMethod === 'Card + Cash') {
+    payLines = `
+      <div class="r-meta-row"><span>Card ···· ${cardLast4}</span><span></span></div>
+      <div class="r-meta-row"><span>Approval Code</span><span>${esc(approvalCode)}</span></div>
+      <div class="r-meta-row"><span>Cash Tendered</span><span>${fmt(cashGiven, cur)}</span></div>
+      <div class="r-meta-row"><span>Change Due</span><span>${fmt(change, cur)}</span></div>
+    `;
+  } else {
+    payLines = `
+      <div class="r-meta-row"><span>${esc(payMethod)}</span><span>${fmt(total, cur)}</span></div>
+      <div class="r-meta-row"><span>Ref. Code</span><span>${esc(approvalCode)}</span></div>
+    `;
+  }
 
-        wrapper.appendChild(header);
-        wrapper.appendChild(metadata);
-        wrapper.appendChild(viewer);
-        wrapper.appendChild(textDiv);
-        pdfList.appendChild(wrapper);
-      });
-    }
+  const dots = '· · · · · · · · · · · · · · · · · · · · · ·';
 
-    async function togglePDF(index, url) {
-      const viewer = document.getElementById(`viewer-${index}`);
-      const wrapper = viewer.parentElement;
-      const button = wrapper.querySelector('button');
-      const isVisible = viewer.style.display === 'block';
+  document.getElementById('receiptBody').innerHTML = `
+    <div class="r-header">
+      <div class="r-shop-name">${esc(shopName)}</div>
+      <div class="r-address">${shopAddress}</div>
+      <div class="r-address">${esc(shopPhone)}${shopWeb ? ' · ' + esc(shopWeb) : ''}</div>
+    </div>
 
-      if (isVisible) {
-        viewer.style.display = 'none';
-        button.setAttribute('aria-expanded', 'false');
-        return;
-      }
+    <div class="r-dots">${dots}</div>
+    <div class="r-title">${esc(receiptTitle)}</div>
+    <div class="r-dots">${dots}</div>
 
-      viewer.style.display = 'block';
-      button.setAttribute('aria-expanded', 'true');
+    <div class="r-meta">
+      <div class="r-meta-row"><span>Date</span><span>${dateStr}</span></div>
+      <div class="r-meta-row"><span>Time</span><span>${esc(txTime)}</span></div>
+      <div class="r-meta-row"><span>Receipt</span><span>${esc(txNum)}</span></div>
+      <div class="r-meta-row"><span>Cashier</span><span>${esc(txCashier)}</span></div>
+    </div>
 
-      if (viewer.getAttribute('data-loaded')) return;
+    <hr class="r-divider">
 
-      try {
-        const pdf = await pdfjsLib.getDocument(url).promise;
-        let allText = '';
+    <div class="r-col-headers">
+      <span style="flex:1">Description</span>
+      <span style="width:30px;text-align:center">Qty</span>
+      <span style="width:60px;text-align:right">Amount</span>
+    </div>
 
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({scale: 1.5});
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-          await page.render({canvasContext: context, viewport}).promise;
-          viewer.appendChild(canvas);
+    ${itemRows}
 
-          const text = await page.getTextContent();
-          const pageText = text.items.map(item => item.str).join(' ');
-          allText += pageText + ' ';
-        }
+    <hr class="r-divider">
 
-        wrapper.querySelector('.pdf-text-content').setAttribute('data-text', allText.toLowerCase());
-        wrapper.querySelector('.pdf-text-content').style.display = 'none';
+    <div class="r-totals">
+      <div class="r-total-row"><span>Subtotal</span><span>${fmt(subtotal, cur)}</span></div>
+      ${discount > 0 ? `<div class="r-total-row"><span>Discount</span><span>-${fmt(discount, cur)}</span></div>` : ''}
+      ${taxPct > 0 ? `<div class="r-total-row"><span>Tax (${taxPct}%)</span><span>${fmt(tax, cur)}</span></div>` : ''}
+      <hr class="r-divider-solid">
+      <div class="r-grand-total"><span>TOTAL</span><span>${fmt(total, cur)}</span></div>
+    </div>
 
-        viewer.setAttribute('data-loaded', 'true');
-      } catch (error) {
-        console.error('Error loading PDF:', error);
-        viewer.innerHTML = '<p>Error loading PDF. Please check the URL.</p>';
-      }
-    }
+    <hr class="r-divider">
 
-    function getClassificationColor(classification) {
-      switch(classification) {
-        case 'TOP SECRET': return '#d32f2f';
-        case 'SECRET': return '#f57c00';
-        case 'CONFIDENTIAL': return '#1976d2';
-        case 'UNCLASSIFIED': return '#388e3c';
-        default: return '#666';
-      }
-    }
+    <div class="r-payment r-meta">
+      ${payLines}
+    </div>
 
-    function filterDocuments() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const categoryFilter = document.getElementById('categoryFilter').value;
-      const entries = document.querySelectorAll('.pdf-entry');
+    ${showThanks || footerNote ? `
+      <div class="r-dots" style="margin-top:14px">${dots}</div>
+      <div class="r-footer">
+        ${showThanks ? `<div class="r-thank-you">— Thank You! —</div>` : ''}
+        ${footerNote ? `<div class="r-note">${esc(footerNote).replace(/\n/g,'<br>')}</div>` : ''}
+      </div>
+    ` : ''}
 
-      entries.forEach(entry => {
-        const name = entry.getAttribute('data-name');
-        const category = entry.getAttribute('data-category');
-        const tags = entry.getAttribute('data-tags');
-        const text = entry.querySelector('.pdf-text-content').getAttribute('data-text') || '';
+    ${showBarcode ? `
+      <div class="r-barcode">${barcodeSVG()}</div>
+      <div class="r-barcode-num">${txNum.replace(/\D/g,'').padStart(12,'0').substring(0,12) || '000000847001'}</div>
+    ` : ''}
+  `;
+}
 
-        const matchesSearch = name.includes(searchTerm) || 
-                             text.includes(searchTerm) || 
-                             tags.includes(searchTerm);
-        const matchesCategory = !categoryFilter || category === categoryFilter;
+// Init date to today
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('txDate').value = today;
 
-        const visible = matchesSearch && matchesCategory;
-        entry.style.display = visible ? '' : 'none';
-      });
-    }
-
-    // Load documents when page loads
-    loadDocuments();
-  </script>
+renderEditor();
+render();
+</script>
 </body>
-<!-- Made by Fritz Teufel, 2025 -->
 </html>
