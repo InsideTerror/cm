@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt Studio Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --panel:#fff;--cream:#f5f2ec;--border:#e0dbd0;
+  --accent:#2d5016;--accent2:#3a6b1e;--muted:#888;--ink:#1a1a1a;
+}
+body{
+  font-family:'DM Sans',sans-serif;background:#1c1c1c;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;padding:36px 20px 80px;color:var(--ink);
+}
+
+/* ─── HEADER ─── */
+.app-header{text-align:center;margin-bottom:32px}
+.app-header h1{font-family:'Playfair Display',serif;font-size:2.1rem;color:#faf8f4;letter-spacing:1px}
+.app-header p{font-family:'DM Mono',monospace;font-size:.64rem;color:#666;letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+
+/* ─── LAYOUT ─── */
+.workspace{display:flex;gap:32px;width:100%;max-width:1200px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+
+/* ─── EDITOR ─── */
+.editor{
+  background:var(--panel);border-radius:16px;padding:22px 26px;
+  flex:1 1 420px;max-width:490px;
+  box-shadow:0 8px 40px rgba(0,0,0,.1);
+}
+
+/* MODE TABS */
+.mode-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:18px}
+.mode-tab{
+  padding:8px 4px;border:1.5px solid var(--border);border-radius:8px;
+  background:none;cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-size:.68rem;font-weight:500;color:var(--muted);
+  transition:all .2s;text-align:center;line-height:1.3;
+}
+.mode-tab:hover{border-color:#bbb;color:var(--ink)}
+.mode-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* THEME + IO BAR */
+.top-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;padding:10px 13px;background:var(--cream);
+  border-radius:10px;gap:10px;flex-wrap:wrap;
+}
+.theme-group{display:flex;align-items:center;gap:9px}
+.bar-label{font-size:.65rem;font-weight:500;color:#666;letter-spacing:.5px}
+.theme-swatches{display:flex;gap:6px}
+.swatch{
+  width:28px;height:28px;border-radius:7px;border:2.5px solid transparent;
+  cursor:pointer;transition:all .18s;font-size:.82rem;
+  display:flex;align-items:center;justify-content:center;
+}
+.swatch:hover{transform:scale(1.12)}
+.swatch.active{border-color:#333}
+.swatch-light{background:#faf8f4}
+.swatch-thermal{background:#d4e8cc}
+.swatch-aged{background:#ede0b5}
+.io-group{display:flex;gap:7px}
+.btn-io{
+  padding:5px 11px;border:1.5px solid var(--border);border-radius:7px;
+  background:#fff;font-family:'DM Mono',monospace;font-size:.63rem;
+  letter-spacing:.5px;cursor:pointer;color:var(--ink);transition:all .18s;
+}
+.btn-io:hover{border-color:var(--accent);color:var(--accent)}
+
+/* SECTION LABEL */
+.section-label{
+  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:3px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:13px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* FIELD GROUP */
+.field-group{margin-bottom:20px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+label{display:block;font-size:.7rem;font-weight:500;color:#666;margin-bottom:4px}
+
+input[type=text],input[type=date],input[type=number],textarea,select{
+  width:100%;background:var(--cream);border:1.5px solid var(--border);
+  border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;
+  font-size:.82rem;color:var(--ink);transition:border-color .18s,box-shadow .18s;outline:none;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,80,22,.08);
+}
+textarea{resize:vertical;min-height:54px;line-height:1.5}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.toggle-row>span{font-size:.79rem;color:var(--ink)}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;cursor:pointer;inset:0;
+  background:#ddd;border-radius:22px;transition:.25s;
+}
+.toggle-slider::before{
+  content:'';position:absolute;width:16px;height:16px;
+  left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;
+}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+
+/* ITEMS (editor) */
+.items-list{display:flex;flex-direction:column;gap:7px}
+.item-row{
+  background:var(--cream);border:1.5px solid var(--border);
+  border-radius:10px;padding:9px 9px 9px 7px;
+  display:flex;align-items:flex-start;gap:7px;
+  transition:border-color .18s,opacity .18s,box-shadow .15s;
+  cursor:grab;
+}
+.item-row:active{cursor:grabbing}
+.item-row:hover{border-color:#bbb}
+.item-row.drag-over{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,80,22,.1)}
+.item-row.dragging{opacity:.45;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.drag-handle{color:#ccc;font-size:.95rem;cursor:grab;padding-top:3px;user-select:none;flex-shrink:0;line-height:1}
+.item-fields{flex:1;min-width:0}
+.item-main-row{display:grid;grid-template-columns:1fr 44px 68px auto;gap:5px;align-items:end}
+.item-main-row.inv{grid-template-columns:1fr 44px 68px 58px auto}
+.item-extra-row{margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.item-extra-row.full{grid-template-columns:1fr}
+.col-label{font-size:.56rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.item-row input{
+  background:#fff;border:1px solid #ddd;padding:5px 6px;
+  font-size:.78rem;border-radius:6px;width:100%;
+}
+.item-row input:focus{border-color:var(--accent);box-shadow:none}
+.item-line-total{
+  font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);
+  padding:5px 2px;text-align:right;white-space:nowrap;
+}
+
+/* CHARGE ROWS (hotel) */
+.charge-row{
+  background:var(--cream);border:1.5px solid var(--border);
+  border-radius:10px;padding:9px;margin-bottom:7px;
+  display:grid;grid-template-columns:58px 1fr 90px 72px 30px;gap:5px;
+  align-items:end;transition:border-color .18s;
+  cursor:grab;
+}
+.charge-row:hover{border-color:#bbb}
+.charge-row.drag-over{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,80,22,.1)}
+.charge-row.dragging{opacity:.45}
+.charge-row input,.charge-row select{
+  background:#fff;border:1px solid #ddd;padding:5px 6px;
+  font-size:.78rem;border-radius:6px;width:100%;
+}
+.charge-row input:focus,.charge-row select:focus{border-color:var(--accent);box-shadow:none}
+
+/* SPLIT ROWS */
+.split-row{
+  background:var(--cream);border:1.5px solid var(--border);
+  border-radius:10px;padding:11px;margin-bottom:7px;
+}
+.split-top{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.split-card{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px}
+.split-row input,.split-row select{
+  background:#fff;border:1px solid #ddd;padding:5px 7px;
+  font-size:.8rem;border-radius:6px;width:100%;
+}
+.split-row input:focus,.split-row select:focus{border-color:var(--accent);box-shadow:none}
+
+/* BUTTONS */
+.btn-add{
+  width:100%;padding:8px;border:1.5px dashed var(--border);
+  border-radius:9px;background:none;cursor:pointer;
+  font-family:'DM Mono',monospace;font-size:.65rem;
+  letter-spacing:2px;color:var(--muted);transition:all .18s;margin-top:8px;
+}
+.btn-add:hover{border-color:var(--accent);color:var(--accent);background:rgba(45,80,22,.03)}
+.btn-remove{
+  background:none;border:none;cursor:pointer;color:#ccc;font-size:.82rem;
+  width:26px;height:26px;border-radius:5px;display:flex;
+  align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;
+}
+.btn-remove:hover{color:#e05;background:#fff0f0}
+.btn-print{
+  width:100%;margin-top:18px;padding:13px;background:var(--accent);
+  color:#fff;border:none;border-radius:11px;font-family:'DM Mono',monospace;
+  font-size:.7rem;letter-spacing:3px;text-transform:uppercase;
+  cursor:pointer;transition:background .18s;
+}
+.btn-print:hover{background:var(--accent2)}
+
+/* ─── PREVIEW ─── */
+.preview-wrap{
+  flex:0 0 auto;display:flex;flex-direction:column;
+  align-items:center;gap:13px;position:sticky;top:36px;
+}
+.preview-label{
+  font-family:'DM Mono',monospace;font-size:.6rem;
+  letter-spacing:3px;text-transform:uppercase;color:#666;
+}
+
+/* ─── RECEIPT ─── */
+.receipt{
+  width:316px;font-family:'DM Mono',monospace;
+  filter:drop-shadow(0 18px 48px rgba(0,0,0,.45));
+  position:relative;
+  /* theme defaults: light */
+  --r-paper:#faf8f4;--r-ink:#1a1a1a;--r-muted:#8a8a8a;
+  --r-dashed:#c8c8c8;--r-solid:#aaa;
+}
+.receipt.theme-thermal{
+  --r-paper:#d4e8cc;--r-ink:#182818;--r-muted:#4a6a44;
+  --r-dashed:#80aa78;--r-solid:#60906a;
+}
+.receipt.theme-aged{
+  --r-paper:#ede0b5;--r-ink:#3a2a18;--r-muted:#7a5a30;
+  --r-dashed:#b8a060;--r-solid:#9a7040;
+}
+
+.receipt-top,.receipt-bottom{width:100%;height:17px;background:var(--r-paper)}
+.receipt-top{
+  mask:radial-gradient(circle at 6px 0,transparent 6px,black 6px) 0 0/12px 100%;
+  -webkit-mask:radial-gradient(circle at 6px 0,transparent 6px,black 6px) 0 0/12px 100%;
+}
+.receipt-bottom{
+  mask:radial-gradient(circle at 6px 100%,transparent 6px,black 6px) 0 0/12px 100%;
+  -webkit-mask:radial-gradient(circle at 6px 100%,transparent 6px,black 6px) 0 0/12px 100%;
+}
+.receipt-body{
+  background:var(--r-paper);color:var(--r-ink);padding:4px 24px 18px;
+}
+.receipt.theme-thermal .receipt-body{
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 11px,rgba(0,40,0,.035) 12px);
+}
+.receipt.theme-aged .receipt-body{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+}
+
+/* Receipt components */
+.r-header{text-align:center;padding:12px 0 14px;border-bottom:1px dashed var(--r-dashed);margin-bottom:12px}
+.r-shop-name{font-size:1.02rem;font-weight:600;letter-spacing:2.5px;text-transform:uppercase}
+.r-address{font-size:.59rem;color:var(--r-muted);margin-top:3px;line-height:1.7}
+.r-dots{font-size:.5rem;color:var(--r-dashed);letter-spacing:1px;text-align:center;margin:7px 0}
+.r-title{text-align:center;font-size:.66rem;letter-spacing:4px;text-transform:uppercase;font-weight:500;margin:3px 0 7px}
+.r-meta{font-size:.59rem;color:var(--r-muted);line-height:1.95}
+.r-row{display:flex;justify-content:space-between}
+.r-row.dark{color:var(--r-ink);font-weight:500}
+.r-divider{border:none;border-top:1px dashed var(--r-dashed);margin:9px 0}
+.r-divider-solid{border:none;border-top:1.5px solid var(--r-solid);margin:9px 0}
+.r-col-hdr{
+  display:flex;font-size:.54rem;color:var(--r-muted);letter-spacing:1px;
+  text-transform:uppercase;padding-bottom:5px;border-bottom:1px solid var(--r-dashed);margin-bottom:5px;
+}
+.r-item{font-size:.66rem;padding:2.5px 0}
+.r-item-row{display:flex;align-items:baseline}
+.r-item-name{flex:1}
+.r-item-qty{width:26px;text-align:center;color:var(--r-muted)}
+.r-item-unit{width:48px;text-align:right;color:var(--r-muted)}
+.r-item-total{width:52px;text-align:right}
+.r-item-mod{font-size:.54rem;color:var(--r-muted);padding-left:6px;font-style:italic;margin-top:1px}
+.r-cat-hdr{
+  font-size:.56rem;color:var(--r-muted);letter-spacing:2px;
+  text-transform:uppercase;margin:8px 0 3px;padding-bottom:2px;
+  border-bottom:1px dotted var(--r-dashed);
+}
+.r-totals{margin-top:3px}
+.r-total-row{display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:var(--r-muted)}
+.r-grand{display:flex;justify-content:space-between;font-size:.96rem;font-weight:600;padding:5px 0 3px;color:var(--r-ink);letter-spacing:.5px}
+/* Invoice */
+.r-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.r-box{border:1px solid var(--r-dashed);padding:5px 7px}
+.r-box-lbl{font-size:.52rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--r-muted);margin-bottom:2px}
+.r-box-val{font-size:.62rem;line-height:1.6;color:var(--r-ink)}
+.r-inv-meta{font-size:.6rem;line-height:1.9;margin-bottom:6px}
+/* Hotel */
+.r-charge{display:flex;font-size:.64rem;padding:2.5px 0}
+.r-charge-date{width:38px;color:var(--r-muted);flex-shrink:0}
+.r-charge-desc{flex:1}
+.r-charge-cat{width:44px;text-align:center;color:var(--r-muted);font-size:.58rem}
+.r-charge-amt{width:50px;text-align:right;flex-shrink:0}
+/* Footer */
+.r-footer{text-align:center;margin-top:13px}
+.r-thank-you{font-size:.7rem;font-weight:500;letter-spacing:3px;text-transform:uppercase}
+.r-note{font-size:.56rem;color:var(--r-muted);margin-top:4px;line-height:1.65;font-style:italic}
+.r-sig{border-top:1px solid var(--r-solid);margin:15px 10px 0;padding-top:4px;font-size:.52rem;color:var(--r-muted);letter-spacing:1px}
+/* Tip guide */
+.r-tips{display:flex;justify-content:space-around;padding:5px 4px;border:1px dashed var(--r-dashed);margin:5px 0;font-size:.6rem}
+.r-tip-col{text-align:center}
+.r-tip-pct{font-size:.54rem;color:var(--r-muted)}
+.r-tip-amt{color:var(--r-ink);font-weight:500}
+/* Barcode */
+.r-barcode{display:flex;justify-content:center;margin-top:12px}
+.r-barcode-num{text-align:center;font-size:.48rem;margin-top:3px;letter-spacing:2px;color:var(--r-muted)}
+
+/* ─── PRINT ─── */
+@media print{
+  body{background:#fff;padding:0;display:block}
+  .editor,.app-header,.preview-label{display:none!important}
+  .workspace,.preview-wrap{display:block}
+  .receipt{filter:none!important;margin:0 auto}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Receipt Studio Pro</h1>
+  <p>Sales · Invoice · Restaurant · Hotel</p>
+</header>
+
+<div class="workspace">
+
+<!-- ══════════ EDITOR ══════════ -->
+<div class="editor">
+
+  <!-- Mode tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="receipt"     onclick="setMode('receipt')">🧾 Receipt</button>
+    <button class="mode-tab"        data-mode="invoice"     onclick="setMode('invoice')">📄 Invoice</button>
+    <button class="mode-tab"        data-mode="restaurant"  onclick="setMode('restaurant')">🍽 Restaurant</button>
+    <button class="mode-tab"        data-mode="hotel"       onclick="setMode('hotel')">🏨 Hotel</button>
+  </div>
+
+  <!-- Theme + IO -->
+  <div class="top-bar">
+    <div class="theme-group">
+      <span class="bar-label">Theme</span>
+      <div class="theme-swatches">
+        <div class="swatch swatch-light  active" data-theme="light"   title="Light"   onclick="setTheme('light')">☀</div>
+        <div class="swatch swatch-thermal"       data-theme="thermal" title="Thermal" onclick="setTheme('thermal')">🖨</div>
+        <div class="swatch swatch-aged"          data-theme="aged"    title="Aged"    onclick="setTheme('aged')">📜</div>
+      </div>
+    </div>
+    <div class="io-group">
+      <button class="btn-io" onclick="saveJSON()">💾 Save</button>
+      <button class="btn-io" onclick="document.getElementById('fileIn').click()">📂 Load</button>
+      <input type="file" id="fileIn" accept=".json" style="display:none" onchange="loadJSON(event)">
+    </div>
+  </div>
+
+  <!-- Store / Company -->
+  <div class="field-group">
+    <div class="section-label">Company / Store</div>
+    <label>Name</label>
+    <input type="text" id="shopName" oninput="S('shopName',this.value)">
+    <div style="height:9px"></div>
+    <label>Address</label>
+    <textarea id="shopAddress" oninput="S('shopAddress',this.value)"></textarea>
+    <div style="height:9px"></div>
+    <div class="field-row">
+      <div><label>Phone</label><input type="text" id="shopPhone" oninput="S('shopPhone',this.value)"></div>
+      <div><label>Website / Email</label><input type="text" id="shopWeb" oninput="S('shopWeb',this.value)"></div>
+    </div>
+  </div>
+
+  <!-- Transaction (receipt + restaurant) -->
+  <div class="field-group" data-modes="receipt,restaurant">
+    <div class="section-label">Transaction</div>
+    <div class="field-row">
+      <div><label>Date</label><input type="date" id="txDate" oninput="S('txDate',this.value)"></div>
+      <div><label>Time</label><input type="text" id="txTime" oninput="S('txTime',this.value)"></div>
+    </div>
+    <div style="height:9px"></div>
+    <div class="field-row">
+      <div><label>Receipt #</label><input type="text" id="txNum" oninput="S('txNum',this.value)"></div>
+      <div><label>Cashier</label><input type="text" id="txCashier" oninput="S('txCashier',this.value)"></div>
+    </div>
+  </div>
+
+  <!-- Invoice Details -->
+  <div class="field-group" data-modes="invoice">
+    <div class="section-label">Invoice Details</div>
+    <div class="field-row">
+      <div><label>Invoice #</label><input type="text" id="invoiceNum" oninput="S('invoiceNum',this.value)"></div>
+      <div><label>PO Number</label><input type="text" id="invoicePO" oninput="S('invoicePO',this.value)"></div>
+    </div>
+    <div style="height:9px"></div>
+    <div class="field-row">
+      <div><label>Issue Date</label><input type="date" id="issueDate" oninput="S('issueDate',this.value)"></div>
+      <div><label>Due Date</label><input type="date" id="dueDate" oninput="S('dueDate',this.value)"></div>
+    </div>
+    <div style="height:9px"></div>
+    <label>Payment Terms</label>
+    <select id="invoiceTerms" onchange="S('invoiceTerms',this.value)">
+      <option>Net 30</option><option>Net 15</option><option>Net 60</option>
+      <option>Due on Receipt</option><option>50% Upfront</option>
+    </select>
+    <div style="height:9px"></div>
+    <div class="field-row">
+      <div><label>Bill To</label><textarea id="billTo" style="min-height:70px" oninput="S('billTo',this.value)"></textarea></div>
+      <div><label>Ship To (optional)</label><textarea id="shipTo" style="min-height:70px" oninput="S('shipTo',this.value)"></textarea></div>
+    </div>
+    <div style="height:9px"></div>
+    <label>Bank / Payment Details</label>
+    <textarea id="bankDetails" oninput="S('bankDetails',this.value)"></textarea>
+    <div style="height:9px"></div>
+    <label>Notes</label>
+    <textarea id="invoiceNotes" oninput="S('invoiceNotes',this.value)"></textarea>
+  </div>
+
+  <!-- Restaurant Details -->
+  <div class="field-group" data-modes="restaurant">
+    <div class="section-label">Restaurant Details</div>
+    <div class="field-row">
+      <div><label>Table #</label><input type="text" id="tableNum" oninput="S('tableNum',this.value)"></div>
+      <div><label>Covers / Guests</label><input type="number" id="covers" min="1" oninput="S('covers',+this.value||1)"></div>
+    </div>
+    <div style="height:9px"></div>
+    <div class="field-row">
+      <div><label>Server</label><input type="text" id="serverName" oninput="S('serverName',this.value)"></div>
+      <div><label>Check #</label><input type="text" id="checkNum" oninput="S('checkNum',this.value)"></div>
+    </div>
+    <div style="height:9px"></div>
+    <div class="toggle-row"><span>Group items by category</span><label class="toggle"><input type="checkbox" id="useCats" onchange="S('useCats',this.checked);renderItems()"><span class="toggle-slider"></span></label></div>
+    <div class="toggle-row"><span>Show gratuity guide</span><label class="toggle"><input type="checkbox" id="showTips" onchange="S('showTips',this.checked)"><span class="toggle-slider"></span></label></div>
+    <div class="toggle-row"><span>Show signature line</span><label class="toggle"><input type="checkbox" id="showSig" onchange="S('showSig',this.checked)"><span class="toggle-slider"></span></label></div>
+    <div style="height:6px"></div>
+    <label>Tip Amount ($)</label>
+    <input type="number" id="tipAmt" min="0" step="0.01" oninput="S('tipAmt',+this.value||0)">
+  </div>
+
+  <!-- Hotel Details -->
+  <div class="field-group" data-modes="hotel">
+    <div class="section-label">Hotel Details</div>
+    <div class="field-row">
+      <div><label>Guest Name</label><input type="text" id="guestName" oninput="S('guestName',this.value)"></div>
+      <div><label>Room #</label><input type="text" id="roomNum" oninput="S('roomNum',this.value)"></div>
+    </div>
+    <div style="height:9px"></div>
+    <label>Room Type</label>
+    <input type="text" id="roomType" oninput="S('roomType',this.value)">
+    <div style="height:9px"></div>
+    <div class="field-row">
+      <div><label>Check-in</label><input type="date" id="checkIn" oninput="S('checkIn',this.value)"></div>
+      <div><label>Check-out</label><input type="date" id="checkOut" oninput="S('checkOut',this.value)"></div>
+    </div>
+  </div>
+
+  <!-- Items (receipt, invoice, restaurant) -->
+  <div class="field-group" data-modes="receipt,invoice,restaurant">
+    <div class="section-label">Items</div>
+    <div id="itemsList" class="items-list"></div>
+    <button class="btn-add" onclick="addItem()">＋ ADD ITEM</button>
+  </div>
+
+  <!-- Hotel Charges -->
+  <div class="field-group" data-modes="hotel">
+    <div class="section-label">Charges</div>
+    <div id="chargesList"></div>
+    <button class="btn-add" onclick="addCharge()">＋ ADD CHARGE</button>
+  </div>
+
+  <!-- Totals (non-hotel) -->
+  <div class="field-group" data-modes="receipt,invoice,restaurant">
+    <div class="section-label">Totals</div>
+    <div class="field-row-3">
+      <div><label>Tax %</label><input type="number" id="taxPct" min="0" step="0.1" oninput="S('taxPct',+this.value||0)"></div>
+      <div>
+        <label>Discount</label>
+        <div style="display:flex;gap:5px">
+          <input type="number" id="discount" min="0" step="0.01" oninput="S('discount',+this.value||0)" style="flex:1">
+          <select id="discountType" onchange="S('discountType',this.value)" style="width:46px;padding:7px 4px">
+            <option value="fixed">$</option><option value="pct">%</option>
+          </select>
+        </div>
+      </div>
+      <div><label>Currency</label><input type="text" id="currency" maxlength="3" oninput="S('currency',this.value)"></div>
+    </div>
+  </div>
+
+  <!-- Hotel Tax + Currency -->
+  <div class="field-group" data-modes="hotel">
+    <div class="section-label">Totals</div>
+    <div class="field-row">
+      <div><label>Currency</label><input type="text" id="hotelCurrency" maxlength="3" oninput="S('currency',this.value)"></div>
+    </div>
+  </div>
+
+  <!-- Split Payments -->
+  <div class="field-group">
+    <div class="section-label">Payment</div>
+    <div id="splitsList"></div>
+    <button class="btn-add" onclick="addSplit()">＋ ADD PAYMENT METHOD</button>
+  </div>
+
+  <!-- Labels & Footer -->
+  <div class="field-group">
+    <div class="section-label">Labels & Footer</div>
+    <label>Receipt / Document Title</label>
+    <input type="text" id="receiptTitle" oninput="S('receiptTitle',this.value)">
+    <div style="height:10px"></div>
+    <div class="toggle-row"><span>Show "Thank You"</span><label class="toggle"><input type="checkbox" id="showThanks" onchange="S('showThanks',this.checked)"><span class="toggle-slider"></span></label></div>
+    <div class="toggle-row" data-modes="receipt,restaurant,hotel"><span>Show Barcode</span><label class="toggle"><input type="checkbox" id="showBarcode" onchange="S('showBarcode',this.checked)"><span class="toggle-slider"></span></label></div>
+    <div style="height:7px"></div>
+    <label>Footer Note</label>
+    <textarea id="footerNote" oninput="S('footerNote',this.value)"></textarea>
+  </div>
+
+  <button class="btn-print" onclick="window.print()">⬡ PRINT / SAVE AS PDF</button>
+</div>
+
+<!-- ══════════ PREVIEW ══════════ -->
+<div class="preview-wrap">
+  <div class="preview-label">Live Preview</div>
+  <div class="receipt theme-light" id="receipt">
+    <div class="receipt-top"></div>
+    <div class="receipt-body" id="receiptBody"></div>
+    <div class="receipt-bottom"></div>
+  </div>
+</div>
+
+</div><!-- /workspace -->
+
+<script>
+/* ═══════════════════════════ STATE ═══════════════════════════ */
+const today = new Date().toISOString().split('T')[0];
+
+const state = {
+  mode:'receipt', theme:'light',
+  shopName:'THE GROVE MARKET',
+  shopAddress:'123 Oak Street, Suite 4\nNew York, NY 10001',
+  shopPhone:'(212) 555-0199', shopWeb:'www.thegrove.co',
+  txDate:today, txTime:'02:34 PM', txNum:'#00847', txCashier:'Alex M.',
+  // invoice
+  invoiceNum:'INV-2024-001', invoicePO:'', issueDate:today, dueDate:'',
+  invoiceTerms:'Net 30',
+  billTo:'Acme Corporation\n456 Business Ave\nSan Francisco, CA 94105',
+  shipTo:'', bankDetails:'Chase Bank · Account: 0042-8821\nRouting: 021000021',
+  invoiceNotes:'Thank you for your business. Please remit within terms.',
+  // restaurant
+  tableNum:'12', covers:2, serverName:'Maria', checkNum:'#C0042',
+  useCats:true, showTips:true, showSig:true, tipAmt:0,
+  // hotel
+  guestName:'John & Jane Doe', roomNum:'412',
+  roomType:'King Deluxe Suite', checkIn:'', checkOut:'',
+  hotelCharges:[
+    {date:'Jan 13',desc:'Room Rate · King Deluxe',cat:'Room',amount:189},
+    {date:'Jan 13',desc:'Minibar',cat:'Extras',amount:24},
+    {date:'Jan 14',desc:'Room Rate · King Deluxe',cat:'Room',amount:189},
+    {date:'Jan 14',desc:'Room Service',cat:'Extras',amount:45},
+    {date:'Jan 14',desc:'Parking',cat:'Extras',amount:25},
+    {date:'Jan 14',desc:'Spa Treatment',cat:'Extras',amount:85},
+    {date:'Jan 14',desc:'Room Tax (10%)',cat:'Tax',amount:37.8},
+  ],
+  // items
+  items:[
+    {name:'Organic Earl Grey Tea',qty:2,price:8.50,cat:'Beverages',mod:''},
+    {name:'Sourdough Loaf',qty:1,price:6.75,cat:'Bakery',mod:''},
+    {name:'Raw Honey (250g)',qty:1,price:12.00,cat:'Pantry',mod:''},
+    {name:'Oat Milk 1L',qty:3,price:3.99,cat:'Dairy & Alt',mod:''},
+  ],
+  taxPct:8.5, discount:0, discountType:'fixed', currency:'$',
+  splitPayments:[{method:'Cash',amount:'',cardLast4:'',approvalCode:''}],
+  receiptTitle:'SALES RECEIPT', showThanks:true, showBarcode:true,
+  footerNote:'All sales final. Returns within 14 days with receipt.',
+};
+
+/* ═════════════════════════ HELPERS ═════════════════════════ */
+const E = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt = (n,cur) => `${cur}${parseFloat(n||0).toFixed(2)}`;
+const dots = '· · · · · · · · · · · · · · · · · · · · ·';
+
+function fmtDate(iso){
+  if(!iso) return '';
+  const d=new Date(iso+'T12:00:00');
+  return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+}
+
+function calcNights(){
+  if(!state.checkIn||!state.checkOut) return 0;
+  const ms=new Date(state.checkOut)-new Date(state.checkIn);
+  return Math.max(0,Math.round(ms/86400000));
+}
+
+/* State setter */
+function S(key,val){state[key]=val;renderReceipt()}
+
+/* ═════════════════════════ MODE ═════════════════════════ */
+function setMode(m){
+  state.mode=m;
+  const labels={receipt:'SALES RECEIPT',invoice:'INVOICE',restaurant:'TABLE RECEIPT',hotel:'GUEST FOLIO'};
+  state.receiptTitle=labels[m];
+  E('receiptTitle').value=state.receiptTitle;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode===m));
+  updateModeVis();
+  renderItems();
+  renderCharges();
+  renderReceipt();
+}
+
+function updateModeVis(){
+  document.querySelectorAll('[data-modes]').forEach(el=>{
+    const modes=el.getAttribute('data-modes').split(',');
+    el.style.display=modes.includes(state.mode)?'':'none';
+  });
+}
+
+/* ═════════════════════════ THEME ═════════════════════════ */
+function setTheme(t){
+  state.theme=t;
+  E('receipt').className='receipt theme-'+t;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active',s.dataset.theme===t));
+}
+
+/* ═══════════════════════ ITEMS CRUD ════════════════════════ */
+let dragIdx=null, dragType=null;
+
+function addItem(){
+  state.items.push({name:'New Item',qty:1,price:0,cat:'',mod:''});
+  renderItems();renderReceipt();
+}
+function removeItem(i){
+  state.items.splice(i,1);renderItems();renderReceipt();
+}
+function itemSet(i,k,v){state.items[i][k]=v;renderReceipt()}
+
+function renderItems(){
+  const m=state.mode;
+  const showCat=(m==='restaurant')&&state.useCats;
+  const showMod=(m==='restaurant');
+  const showUnit=(m==='invoice');
+  E('itemsList').innerHTML=state.items.map((it,i)=>`
+    <div class="item-row" draggable="true"
+      ondragstart="onDS(event,${i},'item')"
+      ondragover="onDO(event,${i},'item')"
+      ondrop="onDP(event,${i},'item')"
+      ondragend="onDE()">
+      <span class="drag-handle">⠿</span>
+      <div class="item-fields">
+        <div class="item-main-row${showUnit?' inv':''}">
+          <div>
+            <div class="col-label">Description</div>
+            <input type="text" value="${esc(it.name)}" oninput="itemSet(${i},'name',this.value)">
+          </div>
+          <div>
+            <div class="col-label">Qty</div>
+            <input type="number" value="${it.qty}" min="0.01" step="1" oninput="itemSet(${i},'qty',+this.value||1)">
+          </div>
+          <div>
+            <div class="col-label">${showUnit?'Unit $':'Price $'}</div>
+            <input type="number" value="${it.price}" min="0" step="0.01" oninput="itemSet(${i},'price',+this.value||0)">
+          </div>
+          ${showUnit?`<div><div class="col-label">Total</div><div class="item-line-total">${fmt(it.qty*it.price,state.currency)}</div></div>`:''}
+          <button class="btn-remove" onclick="removeItem(${i})">✕</button>
+        </div>
+        ${(showCat||showMod)?`
+        <div class="item-extra-row${(!showCat||!showMod)?' full':''}">
+          ${showCat?`<div><div class="col-label">Category</div><input type="text" value="${esc(it.cat||'')}" placeholder="Starters, Mains…" oninput="itemSet(${i},'cat',this.value)"></div>`:''}
+          ${showMod?`<div><div class="col-label">Modifier / Note</div><input type="text" value="${esc(it.mod||'')}" placeholder="e.g. medium-rare" oninput="itemSet(${i},'mod',this.value)"></div>`:''}
+        </div>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════════════ CHARGES CRUD ════════════════════════ */
+function addCharge(){
+  state.hotelCharges.push({date:'',desc:'New Charge',cat:'Extras',amount:0});
+  renderCharges();renderReceipt();
+}
+function removeCharge(i){state.hotelCharges.splice(i,1);renderCharges();renderReceipt()}
+function chargeSet(i,k,v){state.hotelCharges[i][k]=(k==='amount'?+v||0:v);renderReceipt()}
+
+function renderCharges(){
+  const cats=['Room','Extras','F&B','Spa','Tax','Parking','Other'];
+  E('chargesList').innerHTML=state.hotelCharges.map((c,i)=>`
+    <div class="charge-row" draggable="true"
+      ondragstart="onDS(event,${i},'charge')"
+      ondragover="onDO(event,${i},'charge')"
+      ondrop="onDP(event,${i},'charge')"
+      ondragend="onDE()">
+      <div><div class="col-label">Date</div><input type="text" value="${esc(c.date)}" placeholder="Jan 13" oninput="chargeSet(${i},'date',this.value)"></div>
+      <div><div class="col-label">Description</div><input type="text" value="${esc(c.desc)}" oninput="chargeSet(${i},'desc',this.value)"></div>
+      <div><div class="col-label">Category</div>
+        <select onchange="chargeSet(${i},'cat',this.value)">
+          ${cats.map(ct=>`<option${c.cat===ct?' selected':''}>${ct}</option>`).join('')}
+        </select>
+      </div>
+      <div><div class="col-label">Amount</div><input type="number" value="${c.amount}" min="0" step="0.01" oninput="chargeSet(${i},'amount',this.value)"></div>
+      <button class="btn-remove" onclick="removeCharge(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════════════ SPLITS CRUD ════════════════════════ */
+function addSplit(){
+  state.splitPayments.push({method:'Cash',amount:'',cardLast4:'',approvalCode:''});
+  renderSplits();renderReceipt();
+}
+function removeSplit(i){
+  if(state.splitPayments.length===1) return;
+  state.splitPayments.splice(i,1);renderSplits();renderReceipt();
+}
+function splitSet(i,k,v){state.splitPayments[i][k]=v;renderSplits();renderReceipt()}
+
+function renderSplits(){
+  const methods=['Cash','Card','Mobile Pay','Check','Gift Card','Bank Transfer'];
+  E('splitsList').innerHTML=state.splitPayments.map((sp,i)=>{
+    const isCard=(sp.method==='Card');
+    return `
+    <div class="split-row">
+      <div class="split-top">
+        <div>
+          <div class="col-label">Method</div>
+          <select onchange="splitSet(${i},'method',this.value)">
+            ${methods.map(m=>`<option${sp.method===m?' selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <div class="col-label">Amount (blank=auto)</div>
+          <input type="number" value="${sp.amount}" min="0" step="0.01" placeholder="auto"
+            oninput="splitSet(${i},'amount',this.value===''?'':+this.value)">
+        </div>
+        <button class="btn-remove" onclick="removeSplit(${i})" ${state.splitPayments.length===1?'style="opacity:.3;cursor:default"':''}>✕</button>
+      </div>
+      ${isCard?`
+      <div class="split-card">
+        <div><div class="col-label">Card Last 4</div><input type="text" maxlength="4" value="${esc(sp.cardLast4)}" oninput="splitSet(${i},'cardLast4',this.value)"></div>
+        <div><div class="col-label">Approval Code</div><input type="text" value="${esc(sp.approvalCode)}" oninput="splitSet(${i},'approvalCode',this.value)"></div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════ DRAG & DROP ════════════════════════ */
+function onDS(e,i,type){
+  dragIdx=i; dragType=type;
+  e.dataTransfer.effectAllowed='move';
+  setTimeout(()=>e.currentTarget.classList.add('dragging'),0);
+}
+function onDO(e,i,type){
+  if(dragType!==type) return;
+  e.preventDefault();
+  document.querySelectorAll('.item-row,.charge-row').forEach(el=>el.classList.remove('drag-over'));
+  e.currentTarget.classList.add('drag-over');
+}
+function onDP(e,i,type){
+  e.preventDefault();
+  if(dragIdx===null||dragIdx===i||dragType!==type) return;
+  const arr=type==='item'?state.items:state.hotelCharges;
+  const [moved]=arr.splice(dragIdx,1);
+  arr.splice(i,0,moved);
+  dragIdx=null; dragType=null;
+  if(type==='item') renderItems(); else renderCharges();
+  renderReceipt();
+}
+function onDE(){
+  dragIdx=null; dragType=null;
+  document.querySelectorAll('.item-row,.charge-row').forEach(el=>{
+    el.classList.remove('dragging','drag-over');
+  });
+}
+
+/* ═══════════════════════ CALC TOTALS ════════════════════════ */
+function calcTotals(){
+  const sub=state.items.reduce((s,it)=>s+it.qty*it.price,0);
+  let discAmt=state.discountType==='pct'?sub*state.discount/100:state.discount;
+  discAmt=Math.min(discAmt,sub);
+  const taxable=sub-discAmt;
+  const tax=taxable*state.taxPct/100;
+  const tip=state.mode==='restaurant'?state.tipAmt:0;
+  const total=taxable+tax+tip;
+  return {sub,discAmt,tax,tip,total};
+}
+
+function calcHotelTotal(){
+  return state.hotelCharges.reduce((s,c)=>s+c.amount,0);
+}
+
+/* ═══════════════════════ RENDER RECEIPT ════════════════════════ */
+function renderReceipt(){
+  const dispatch={receipt:renderSales,invoice:renderInvoice,restaurant:renderRestaurant,hotel:renderHotel};
+  E('receiptBody').innerHTML=(dispatch[state.mode]||renderSales)();
+}
+
+/* ──── COMMON BLOCKS ──── */
+function headerBlock(){
+  const addr=esc(state.shopAddress).replace(/\n/g,'<br>');
+  return `<div class="r-header">
+    <div class="r-shop-name">${esc(state.shopName)}</div>
+    <div class="r-address">${addr}</div>
+    <div class="r-address">${esc(state.shopPhone)}${state.shopWeb?' &middot; '+esc(state.shopWeb):''}</div>
+  </div>`;
+}
+
+function footerBlock(){
+  let html='';
+  if(state.showThanks||state.footerNote){
+    html+=`<div class="r-dots">${dots}</div><div class="r-footer">`;
+    if(state.showThanks) html+=`<div class="r-thank-you">— Thank You! —</div>`;
+    if(state.footerNote) html+=`<div class="r-note">${esc(state.footerNote).replace(/\n/g,'<br>')}</div>`;
+    html+='</div>';
+  }
+  if(state.showBarcode&&state.mode!=='invoice'){
+    html+=`<div class="r-barcode">${barcodeSVG()}</div>
+    <div class="r-barcode-num">${(state.txNum||'').replace(/\D/g,'').padStart(12,'0').slice(-12)||'000000847001'}</div>`;
+  }
+  return html;
+}
+
+function paymentBlock(total){
+  const cur=state.currency;
+  const splits=state.splitPayments;
+  let specSum=splits.filter(s=>s.amount!=='').reduce((a,s)=>a+(+s.amount||0),0);
+  let unspecCount=splits.filter(s=>s.amount==='').length;
+  let autoAmt=unspecCount>0?Math.max(0,total-specSum)/unspecCount:0;
+  let totalPaid=specSum+(autoAmt*unspecCount);
+  let change=Math.max(0,totalPaid-total);
+
+  let lines=splits.map(sp=>{
+    const amt=sp.amount!==''?+sp.amount:autoAmt;
+    let html='';
+    if(sp.method==='Card'){
+      html+=`<div class="r-row"><span>Card${sp.cardLast4?' ···· '+esc(sp.cardLast4):''}</span><span>${fmt(amt,cur)}</span></div>`;
+      if(sp.approvalCode) html+=`<div class="r-row"><span>Approval</span><span>${esc(sp.approvalCode)}</span></div>`;
+    } else if(sp.method==='Cash'){
+      html+=`<div class="r-row"><span>Cash Tendered</span><span>${fmt(amt,cur)}</span></div>`;
+    } else {
+      html+=`<div class="r-row"><span>${esc(sp.method)}</span><span>${fmt(amt,cur)}</span></div>`;
+    }
+    return html;
+  }).join('');
+
+  if(splits.length>1){
+    lines+=`<div class="r-row dark"><span>Total Paid</span><span>${fmt(totalPaid,cur)}</span></div>`;
+  }
+  if(change>0.005){
+    lines+=`<div class="r-row"><span>Change Due</span><span>${fmt(change,cur)}</span></div>`;
+  }
+  return `<hr class="r-divider"><div class="r-meta">${lines}</div>`;
+}
+
+/* ──── SALES RECEIPT ──── */
+function renderSales(){
+  const cur=state.currency;
+  const {sub,discAmt,tax,total}=calcTotals();
+  const itemRows=state.items.map(it=>`
+    <div class="r-item">
+      <div class="r-item-row">
+        <div class="r-item-name">${esc(it.name)}</div>
+        <div class="r-item-qty">${it.qty}</div>
+        <div class="r-item-total">${fmt(it.qty*it.price,cur)}</div>
+      </div>
+    </div>`).join('');
+
+  return `
+    ${headerBlock()}
+    <div class="r-dots">${dots}</div>
+    <div class="r-title">${esc(state.receiptTitle)}</div>
+    <div class="r-dots">${dots}</div>
+    <div class="r-meta">
+      <div class="r-row"><span>Date</span><span>${fmtDate(state.txDate)}</span></div>
+      <div class="r-row"><span>Time</span><span>${esc(state.txTime)}</span></div>
+      <div class="r-row"><span>Receipt</span><span>${esc(state.txNum)}</span></div>
+      <div class="r-row"><span>Cashier</span><span>${esc(state.txCashier)}</span></div>
+    </div>
+    <hr class="r-divider">
+    <div class="r-col-hdr">
+      <span style="flex:1">Description</span>
+      <span style="width:26px;text-align:center">Qty</span>
+      <span style="width:52px;text-align:right">Amount</span>
+    </div>
+    ${itemRows}
+    <hr class="r-divider">
+    <div class="r-totals">
+      <div class="r-total-row"><span>Subtotal</span><span>${fmt(sub,cur)}</span></div>
+      ${discAmt>0?`<div class="r-total-row"><span>Discount</span><span>-${fmt(discAmt,cur)}</span></div>`:''}
+      ${state.taxPct>0?`<div class="r-total-row"><span>Tax (${state.taxPct}%)</span><span>${fmt(tax,cur)}</span></div>`:''}
+      <hr class="r-divider-solid">
+      <div class="r-grand"><span>TOTAL</span><span>${fmt(total,cur)}</span></div>
+    </div>
+    ${paymentBlock(total)}
+    ${footerBlock()}`;
+}
+
+/* ──── INVOICE ──── */
+function renderInvoice(){
+  const cur=state.currency;
+  const {sub,discAmt,tax,total}=calcTotals();
+
+  const itemRows=state.items.map(it=>`
+    <div class="r-item">
+      <div class="r-item-row">
+        <div class="r-item-name">${esc(it.name)}</div>
+        <div class="r-item-qty">${it.qty}</div>
+        <div class="r-item-unit">${fmt(it.price,cur)}</div>
+        <div class="r-item-total">${fmt(it.qty*it.price,cur)}</div>
+      </div>
+    </div>`).join('');
+
+  const billLines=esc(state.billTo).replace(/\n/g,'<br>');
+  const shipLines=esc(state.shipTo).replace(/\n/g,'<br>');
+
+  return `
+    ${headerBlock()}
+    <div class="r-dots">${dots}</div>
+    <div class="r-title" style="font-size:.8rem;letter-spacing:6px">INVOICE</div>
+    <div class="r-dots">${dots}</div>
+    <div class="r-inv-meta">
+      <div class="r-row"><span>Invoice #</span><span>${esc(state.invoiceNum)}</span></div>
+      ${state.invoicePO?`<div class="r-row"><span>PO Number</span><span>${esc(state.invoicePO)}</span></div>`:''}
+      <div class="r-row"><span>Issue Date</span><span>${fmtDate(state.issueDate)||fmtDate(state.txDate)}</span></div>
+      ${state.dueDate?`<div class="r-row"><span>Due Date</span><span>${fmtDate(state.dueDate)}</span></div>`:''}
+      <div class="r-row"><span>Terms</span><span>${esc(state.invoiceTerms)}</span></div>
+    </div>
+    <div class="r-info-grid">
+      <div class="r-box">
+        <div class="r-box-lbl">Bill To</div>
+        <div class="r-box-val">${billLines||'—'}</div>
+      </div>
+      ${state.shipTo?`<div class="r-box"><div class="r-box-lbl">Ship To</div><div class="r-box-val">${shipLines}</div></div>`:'<div></div>'}
+    </div>
+    <hr class="r-divider">
+    <div class="r-col-hdr">
+      <span style="flex:1">Description</span>
+      <span style="width:26px;text-align:center">Qty</span>
+      <span style="width:48px;text-align:right">Unit</span>
+      <span style="width:52px;text-align:right">Total</span>
+    </div>
+    ${itemRows}
+    <hr class="r-divider">
+    <div class="r-totals">
+      <div class="r-total-row"><span>Subtotal</span><span>${fmt(sub,cur)}</span></div>
+      ${discAmt>0?`<div class="r-total-row"><span>Discount</span><span>-${fmt(discAmt,cur)}</span></div>`:''}
+      ${state.taxPct>0?`<div class="r-total-row"><span>Tax (${state.taxPct}%)</span><span>${fmt(tax,cur)}</span></div>`:''}
+      <hr class="r-divider-solid">
+      <div class="r-grand"><span>AMOUNT DUE</span><span>${fmt(total,cur)}</span></div>
+    </div>
+    ${state.bankDetails?`
+      <hr class="r-divider">
+      <div class="r-meta">
+        <div style="font-size:.56rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--r-muted);margin-bottom:3px">Payment Instructions</div>
+        ${esc(state.bankDetails).replace(/\n/g,'<br>')}
+      </div>`:''}
+    ${state.invoiceNotes?`
+      <hr class="r-divider">
+      <div class="r-meta" style="font-style:italic">${esc(state.invoiceNotes).replace(/\n/g,'<br>')}</div>`:''}
+    ${state.showThanks?`<div class="r-dots" style="margin-top:12px">${dots}</div><div class="r-footer"><div class="r-thank-you">— Thank You —</div></div>`:''}`;
+}
+
+/* ──── RESTAURANT ──── */
+function renderRestaurant(){
+  const cur=state.currency;
+  const {sub,discAmt,tax,tip,total}=calcTotals();
+  let itemsHTML='';
+
+  if(state.useCats){
+    // Group by category
+    const grouped={};
+    const order=[];
+    state.items.forEach(it=>{
+      const c=it.cat||'Other';
+      if(!grouped[c]){grouped[c]=[];order.push(c);}
+      grouped[c].push(it);
+    });
+    order.forEach(cat=>{
+      itemsHTML+=`<div class="r-cat-hdr">── ${esc(cat)} ──</div>`;
+      grouped[cat].forEach(it=>{
+        itemsHTML+=`<div class="r-item">
+          <div class="r-item-row">
+            <div class="r-item-name">${esc(it.name)}</div>
+            <div class="r-item-qty">${it.qty}</div>
+            <div class="r-item-total">${fmt(it.qty*it.price,cur)}</div>
+          </div>
+          ${it.mod?`<div class="r-item-mod">· ${esc(it.mod)}</div>`:''}
+        </div>`;
+      });
+    });
+  } else {
+    state.items.forEach(it=>{
+      itemsHTML+=`<div class="r-item">
+        <div class="r-item-row">
+          <div class="r-item-name">${esc(it.name)}</div>
+          <div class="r-item-qty">${it.qty}</div>
+          <div class="r-item-total">${fmt(it.qty*it.price,cur)}</div>
+        </div>
+        ${it.mod?`<div class="r-item-mod">· ${esc(it.mod)}</div>`:''}
+      </div>`;
+    });
+  }
+
+  const tipGuide=state.showTips?`
+    <hr class="r-divider">
+    <div style="font-size:.56rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--r-muted);margin-bottom:4px">Suggested Gratuity</div>
+    <div class="r-tips">
+      ${[15,18,20].map(p=>`<div class="r-tip-col"><div class="r-tip-pct">${p}%</div><div class="r-tip-amt">${fmt(sub*p/100,cur)}</div></div>`).join('')}
+    </div>`:'';
+
+  return `
+    ${headerBlock()}
+    <div class="r-dots">${dots}</div>
+    <div class="r-title">${esc(state.receiptTitle)}</div>
+    <div class="r-dots">${dots}</div>
+    <div class="r-meta">
+      <div class="r-row"><span>Date</span><span>${fmtDate(state.txDate)}</span></div>
+      <div class="r-row"><span>Time</span><span>${esc(state.txTime)}</span></div>
+      <div class="r-row"><span>Table</span><span>${esc(state.tableNum)} &middot; ${state.covers} cover${state.covers!==1?'s':''}</span></div>
+      <div class="r-row"><span>Server</span><span>${esc(state.serverName)}</span></div>
+      <div class="r-row"><span>Check</span><span>${esc(state.checkNum)}</span></div>
+    </div>
+    <hr class="r-divider">
+    <div class="r-col-hdr">
+      <span style="flex:1">Item</span>
+      <span style="width:26px;text-align:center">Qty</span>
+      <span style="width:52px;text-align:right">Amount</span>
+    </div>
+    ${itemsHTML}
+    <hr class="r-divider">
+    <div class="r-totals">
+      <div class="r-total-row"><span>Subtotal</span><span>${fmt(sub,cur)}</span></div>
+      ${discAmt>0?`<div class="r-total-row"><span>Discount</span><span>-${fmt(discAmt,cur)}</span></div>`:''}
+      ${state.taxPct>0?`<div class="r-total-row"><span>Tax (${state.taxPct}%)</span><span>${fmt(tax,cur)}</span></div>`:''}
+      ${tip>0?`<div class="r-total-row"><span>Gratuity</span><span>${fmt(tip,cur)}</span></div>`:''}
+      <hr class="r-divider-solid">
+      <div class="r-grand"><span>TOTAL</span><span>${fmt(total,cur)}</span></div>
+    </div>
+    ${tipGuide}
+    ${paymentBlock(total)}
+    ${state.showSig?`<div class="r-sig">Signature ___________________________</div>`:''}
+    ${footerBlock()}`;
+}
+
+/* ──── HOTEL FOLIO ──── */
+function renderHotel(){
+  const cur=state.currency;
+  const nights=calcNights();
+  const total=calcHotelTotal();
+
+  // Group charges by category
+  const grouped={};
+  const order=[];
+  state.hotelCharges.forEach(c=>{
+    if(!grouped[c.cat]){grouped[c.cat]=[];order.push(c.cat);}
+    grouped[c.cat].push(c);
+  });
+
+  let chargeRows='';
+  order.forEach(cat=>{
+    chargeRows+=`<div class="r-cat-hdr">── ${esc(cat)} ──</div>`;
+    grouped[cat].forEach(c=>{
+      chargeRows+=`<div class="r-charge">
+        <div class="r-charge-date">${esc(c.date)}</div>
+        <div class="r-charge-desc">${esc(c.desc)}</div>
+        <div class="r-charge-amt">${fmt(c.amount,cur)}</div>
+      </div>`;
+    });
+  });
+
+  // Subtotals by category
+  const catSums={};
+  state.hotelCharges.forEach(c=>{catSums[c.cat]=(catSums[c.cat]||0)+c.amount;});
+  const catTotalRows=Object.entries(catSums).map(([k,v])=>
+    `<div class="r-total-row"><span>${k}</span><span>${fmt(v,cur)}</span></div>`).join('');
+
+  return `
+    ${headerBlock()}
+    <div class="r-dots">${dots}</div>
+    <div class="r-title">${esc(state.receiptTitle)}</div>
+    <div class="r-dots">${dots}</div>
+    <div class="r-meta">
+      <div class="r-row dark"><span>Guest</span><span>${esc(state.guestName)}</span></div>
+      <div class="r-row"><span>Room ${esc(state.roomNum)}</span><span>${esc(state.roomType)}</span></div>
+      ${state.checkIn?`<div class="r-row"><span>Check-in</span><span>${fmtDate(state.checkIn)}</span></div>`:''}
+      ${state.checkOut?`<div class="r-row"><span>Check-out</span><span>${fmtDate(state.checkOut)}</span></div>`:''}
+      ${nights>0?`<div class="r-row"><span>Duration</span><span>${nights} night${nights!==1?'s':''}</span></div>`:''}
+    </div>
+    <hr class="r-divider">
+    <div class="r-col-hdr">
+      <span style="width:38px">Date</span>
+      <span style="flex:1">Description</span>
+      <span style="width:50px;text-align:right">Amount</span>
+    </div>
+    ${chargeRows}
+    <hr class="r-divider">
+    <div class="r-totals">
+      ${catTotalRows}
+      <hr class="r-divider-solid">
+      <div class="r-grand"><span>TOTAL DUE</span><span>${fmt(total,cur)}</span></div>
+    </div>
+    ${paymentBlock(total)}
+    ${footerBlock()}`;
+}
+
+/* ──── BARCODE ──── */
+function barcodeSVG(){
+  const bars=[2,1,3,1,2,2,1,3,2,1,2,1,3,1,2,3,1,2,1,2,1,3,2,1,1,3,2,1,2,1];
+  let x=0,rects='';
+  bars.forEach((w,i)=>{
+    if(i%2===0) rects+=`<rect x="${x}" y="0" width="${w*2}" height="34" fill="var(--r-ink)"/>`;
+    x+=w*2;
+  });
+  return `<svg width="${x}" height="34" viewBox="0 0 ${x} 34" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
+}
+
+/* ═════════════════════ SAVE / LOAD ═════════════════════ */
+function saveJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`receipt-${state.txNum||'draft'}.json`.replace(/[^\w\-\.]/g,'_');
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadJSON(e){
+  const f=e.target.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      Object.assign(state,data);
+      initEditor();
+      setMode(state.mode);
+      setTheme(state.theme);
+    } catch(err){
+      alert('Invalid receipt file.');
+    }
+    e.target.value='';
+  };
+  r.readAsText(f);
+}
+
+/* ═════════════════════ INIT ═════════════════════ */
+function initEditor(){
+  // Populate all static fields from state
+  const fields={
+    shopName:state.shopName, shopAddress:state.shopAddress,
+    shopPhone:state.shopPhone, shopWeb:state.shopWeb,
+    txDate:state.txDate, txTime:state.txTime, txNum:state.txNum, txCashier:state.txCashier,
+    invoiceNum:state.invoiceNum, invoicePO:state.invoicePO,
+    issueDate:state.issueDate||state.txDate, dueDate:state.dueDate,
+    invoiceTerms:state.invoiceTerms, billTo:state.billTo, shipTo:state.shipTo,
+    bankDetails:state.bankDetails, invoiceNotes:state.invoiceNotes,
+    tableNum:state.tableNum, serverName:state.serverName, checkNum:state.checkNum,
+    guestName:state.guestName, roomNum:state.roomNum, roomType:state.roomType,
+    checkIn:state.checkIn, checkOut:state.checkOut,
+    taxPct:state.taxPct, discount:state.discount, currency:state.currency,
+    hotelCurrency:state.currency, receiptTitle:state.receiptTitle, footerNote:state.footerNote,
+    tipAmt:state.tipAmt||0,
+  };
+  Object.entries(fields).forEach(([k,v])=>{if(E(k)) E(k).value=v??'';});
+  
+  // Number inputs
+  if(E('covers')) E('covers').value=state.covers;
+  if(E('discountType')) E('discountType').value=state.discountType;
+  
+  // Checkboxes
+  const checks={useCats:state.useCats,showTips:state.showTips,showSig:state.showSig,
+    showThanks:state.showThanks,showBarcode:state.showBarcode};
+  Object.entries(checks).forEach(([k,v])=>{if(E(k)) E(k).checked=!!v;});
+}
+
+function init(){
+  initEditor();
+  renderItems();
+  renderCharges();
+  renderSplits();
+  setMode(state.mode);
+  // mode tabs already handled in setMode
+}
+
+init();
+</script>
+</body>
+</html>
